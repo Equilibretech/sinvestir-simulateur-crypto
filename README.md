@@ -5,7 +5,8 @@ Transposition du [simulateur crypto S'investir](https://sinvestir.fr/simulateur-
 
 > Test technique — poste **Développeur IA freelance** chez S'investir.
 
-**Démo en ligne :** _(lien Vercel — à compléter au déploiement)_
+**Démo en ligne :** https://sinvestir-simulateur-test.vercel.app
+**Code :** https://github.com/Equilibretech/sinvestir-simulateur-crypto
 
 ![Aperçu](./docs/screenshot-home.png)
 
