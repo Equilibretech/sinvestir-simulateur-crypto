@@ -16,7 +16,8 @@ Transposition du [simulateur crypto S'investir](https://sinvestir.fr/simulateur-
 - Deux stratégies : **apport unique** (lump sum) et **DCA mensuel** (versements réguliers).
 - Résultats : total investi, valeur finale, **plus/moins-value (€ et %)** + **graphique d'évolution** (valeur vs investi).
 - **Analyse IA** : explication du résultat en langage naturel (modèle Claude via OpenRouter).
-- Données de prix **hybrides** : CoinGecko en live, **repli automatique** sur un snapshot local si l'API échoue.
+- Données de prix **hybrides** : Binance en live (historique **multi-années**), **repli automatique** sur un snapshot local si l'API échoue.
+- **Présélections de période** (1 an / 3 ans / 5 ans / Max) en plus du choix de dates libre.
 - Thème fidèle à `simulateurs.sinvestir.fr`, **responsive** desktop/mobile.
 
 ## 🚀 Lancer en local
@@ -38,7 +39,7 @@ pnpm dev                     # http://localhost:3000
 
 ## 🧱 Stack & partis pris
 
-**Next.js 16 (App Router) · TypeScript · Tailwind v4 · Lexend · Recharts · CoinGecko · OpenRouter (Claude) · Vercel.**
+**Next.js 16 (App Router) · TypeScript · Tailwind v4 · Lexend · Recharts · Binance API · OpenRouter (Claude) · Vercel.**
 
 - **Next.js plutôt que Nuxt** : le site vitrine `simulateurs.sinvestir.fr` est en Nuxt/Vue,
   mais la **stack interne annoncée** par S'investir est **Next.js + Supabase + Vercel**.
@@ -46,9 +47,11 @@ pnpm dev                     # http://localhost:3000
   agents IA, automatisations) tout en **reproduisant fidèlement le rendu visuel** du site.
 - **Tailwind v4** : le site cible est lui-même en Tailwind v4 (tokens OKLCH) → cohérence directe.
   La charte est centralisée en variables CSS (`src/app/globals.css`, cf. [docs/DESIGN-TOKENS.md](./docs/DESIGN-TOKENS.md)).
-- **Données hybrides (live + fallback)** : CoinGecko gratuit est limité à ~365 jours et peut
-  rate-limiter ; un snapshot embarqué (`src/data/snapshot.json`) garantit une **démo toujours
-  fonctionnelle**, même hors-ligne ou en cas de quota dépassé.
+- **Données hybrides (live + fallback)** : l'API publique **Binance** (paires EUR, sans clé)
+  fournit un historique journalier **multi-années** ; un snapshot embarqué
+  (`src/data/snapshot.json`) garantit une **démo toujours fonctionnelle**, même hors-ligne
+  ou en cas d'indisponibilité de l'API. Les fonctions serveur sont déployées en région
+  **Europe (`fra1`)** car l'API Binance bloque les IP US (région Vercel par défaut).
 - **Touche IA** : pertinente pour le poste « Dev IA ». L'appel passe par une **route serveur**
   (`/api/explain`) pour ne jamais exposer la clé côté client, avec un **fallback** si pas de clé.
 - **Calcul côté client** : le moteur (`simulate.ts`) est une **fonction pure**, recalculée
@@ -73,7 +76,7 @@ src/
 │  ├─ layout.tsx            # police Lexend + métadonnées
 │  ├─ globals.css           # charte S'investir (tokens CSS)
 │  └─ api/
-│     ├─ prices/route.ts    # prix CoinGecko + fallback snapshot
+│     ├─ prices/route.ts    # prix Binance (live) + fallback snapshot
 │     └─ explain/route.ts   # analyse IA (OpenRouter/Claude) + fallback
 ├─ components/              # Simulator, ResultCards, EvolutionChart, AiExplanation, Header
 ├─ lib/                     # types, simulate (moteur), prices, coins, format
@@ -82,7 +85,7 @@ src/
 
 ## ⚠️ Limites connues (périmètre volontairement court — ~½ journée)
 
-- Historique limité aux **~365 derniers jours** (limite du tier gratuit CoinGecko).
+- Historique : depuis **janvier 2020** (BTC/ETH) et **mai 2021** (SOL), profondeur des paires EUR Binance.
 - 3 cryptos et 2 fréquences (apport unique / DCA mensuel) — extensible facilement via `src/lib/coins.ts`.
 - Frais de transaction non modélisés.
 

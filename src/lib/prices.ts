@@ -3,20 +3,27 @@ import snapshot from "@/data/snapshot.json";
 
 const SNAPSHOT = snapshot as Record<string, PricePoint[]>;
 
+/** Mapping vers les paires EUR de Binance. */
+const BINANCE_PAIR: Record<string, string> = {
+  bitcoin: "BTCEUR",
+  ethereum: "ETHEUR",
+  solana: "SOLEUR",
+};
+
 export interface PricesResult {
   prices: PricePoint[];
-  /** "live" si CoinGecko a répondu, "snapshot" si on est retombé sur le fallback. */
+  /** "live" si Binance a répondu, "snapshot" si on est retombé sur le fallback. */
   source: "live" | "snapshot";
 }
 
 /**
  * Récupère l'historique journalier (EUR) d'une crypto.
- * Stratégie hybride : CoinGecko en live, repli sur le snapshot embarqué en cas d'échec
- * (API down, quota dépassé, hors-ligne).
+ * Stratégie hybride : Binance en live (multi-années), repli sur le snapshot
+ * embarqué en cas d'échec (API down, géo-blocage, hors-ligne).
  */
 export async function getPrices(coinId: string): Promise<PricesResult> {
   try {
-    const live = await fetchFromCoinGecko(coinId);
+    const live = await fetchFromBinance(coinId);
     if (live.length > 0) return { prices: live, source: "live" };
   } catch {
     // on bascule sur le fallback ci-dessous
@@ -24,32 +31,39 @@ export async function getPrices(coinId: string): Promise<PricesResult> {
   return { prices: SNAPSHOT[coinId] ?? [], source: "snapshot" };
 }
 
-async function fetchFromCoinGecko(coinId: string): Promise<PricePoint[]> {
-  const url =
-    `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart` +
-    `?vs_currency=eur&days=365`;
+async function fetchFromBinance(coinId: string): Promise<PricePoint[]> {
+  const symbol = BINANCE_PAIR[coinId];
+  if (!symbol) return [];
 
-  const res = await fetch(url, {
-    headers: { Accept: "application/json" },
-    // Cache CoinGecko 1h côté serveur Next pour limiter les appels / le quota.
-    next: { revalidate: 3600 },
-  });
-  if (!res.ok) throw new Error(`CoinGecko ${res.status}`);
-
-  const data = (await res.json()) as { prices: [number, number][] };
   const byDay = new Map<string, number>();
-  for (const [ms, price] of data.prices) {
-    const date = new Date(ms).toISOString().slice(0, 10);
-    byDay.set(date, Math.round(price * 100) / 100); // dernier prix du jour
+  let endTime: number | undefined;
+
+  // Pagination : Binance limite à 1000 bougies/appel. On remonte jusqu'à ~8 ans.
+  for (let i = 0; i < 3; i++) {
+    let url =
+      `https://api.binance.com/api/v3/klines` +
+      `?symbol=${symbol}&interval=1d&limit=1000`;
+    if (endTime) url += `&endTime=${endTime}`;
+
+    const res = await fetch(url, {
+      headers: { Accept: "application/json" },
+      // Cache 1h côté serveur Next pour limiter les appels.
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) throw new Error(`Binance ${res.status}`);
+
+    const klines = (await res.json()) as [number, string, string, string, string][];
+    if (!Array.isArray(klines) || klines.length === 0) break;
+
+    for (const k of klines) {
+      const date = new Date(k[0]).toISOString().slice(0, 10);
+      byDay.set(date, Math.round(parseFloat(k[4]) * 100) / 100); // close
+    }
+    endTime = klines[0][0] - 1; // juste avant la plus ancienne bougie
+    if (klines.length < 1000) break;
   }
+
   return [...byDay.entries()]
     .map(([date, price]) => ({ date, price }))
     .sort((a, b) => a.date.localeCompare(b.date));
-}
-
-/** Bornes de dates disponibles (basées sur le snapshot, ~365 derniers jours). */
-export function availableRange(coinId: string): { min: string; max: string } {
-  const s = SNAPSHOT[coinId] ?? [];
-  if (s.length === 0) return { min: "", max: "" };
-  return { min: s[0].date, max: s[s.length - 1].date };
 }

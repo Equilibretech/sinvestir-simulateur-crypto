@@ -19,7 +19,7 @@ export default function Home() {
         <Simulator />
       </main>
       <footer className="border-t border-border/60 py-5 text-center text-xs text-muted">
-        Démo — test technique S&apos;investir · Données CoinGecko
+        Démo — test technique S&apos;investir · Données Binance
       </footer>
     </>
   );

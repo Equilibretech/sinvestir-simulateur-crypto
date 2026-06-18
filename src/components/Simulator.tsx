@@ -8,6 +8,13 @@ import { ResultCards } from "./ResultCards";
 import { EvolutionChart } from "./EvolutionChart";
 import { AiExplanation } from "./AiExplanation";
 
+const PRESETS: { label: string; years: number | "max" }[] = [
+  { label: "1 an", years: 1 },
+  { label: "3 ans", years: 3 },
+  { label: "5 ans", years: 5 },
+  { label: "Max", years: "max" },
+];
+
 /**
  * Composant autonome et embarquable.
  * Aucune dépendance à un état global : il peut être déposé tel quel dans
@@ -15,7 +22,8 @@ import { AiExplanation } from "./AiExplanation";
  */
 export function Simulator() {
   const [coinId, setCoinId] = useState("bitcoin");
-  const [amount, setAmount] = useState(1000);
+  // Le montant est stocké en texte pour permettre l'effacement du champ.
+  const [amountText, setAmountText] = useState("1000");
   const [frequency, setFrequency] = useState<Frequency>("monthly");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -24,6 +32,8 @@ export function Simulator() {
   const [source, setSource] = useState<"live" | "snapshot" | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const amount = Math.max(0, Number(amountText.replace(",", ".")) || 0);
 
   // Charge les prix à chaque changement de crypto.
   useEffect(() => {
@@ -38,8 +48,11 @@ export function Simulator() {
         setPrices(pts);
         setSource(data.source ?? null);
         if (pts.length > 0) {
-          setStartDate(pts[0].date);
-          setEndDate(pts[pts.length - 1].date);
+          const min = pts[0].date;
+          const max = pts[pts.length - 1].date;
+          // Période par défaut : 3 dernières années (ou tout l'historique si plus court).
+          setEndDate(max);
+          setStartDate(maxIso(subYears(max, 3), min));
         }
       })
       .catch(() => !cancelled && setError("Chargement des prix impossible."))
@@ -49,10 +62,19 @@ export function Simulator() {
     };
   }, [coinId]);
 
+  const bounds = useMemo(
+    () =>
+      prices.length > 0
+        ? { min: prices[0].date, max: prices[prices.length - 1].date }
+        : { min: "", max: "" },
+    [prices],
+  );
+
   const input: SimulationInput = { coinId, amount, frequency, startDate, endDate };
 
   const result = useMemo(() => {
     if (prices.length === 0 || !startDate || !endDate || amount <= 0) return null;
+    if (startDate > endDate) return null;
     try {
       return simulate(input, prices);
     } catch {
@@ -61,14 +83,14 @@ export function Simulator() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prices, coinId, amount, frequency, startDate, endDate]);
 
+  function applyPreset(years: number | "max") {
+    if (!bounds.max) return;
+    setEndDate(bounds.max);
+    setStartDate(years === "max" ? bounds.min : maxIso(subYears(bounds.max, years), bounds.min));
+  }
+
   const coin = getCoin(coinId)!;
-  const bounds = useMemo(
-    () =>
-      prices.length > 0
-        ? { min: prices[0].date, max: prices[prices.length - 1].date }
-        : { min: "", max: "" },
-    [prices],
-  );
+  const invalidRange = Boolean(startDate && endDate && startDate > endDate);
 
   return (
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-[340px_1fr]">
@@ -103,18 +125,31 @@ export function Simulator() {
         </Field>
 
         <Field
-          label={
-            frequency === "lump" ? "Montant investi (€)" : "Montant par mois (€)"
-          }
+          label={frequency === "lump" ? "Montant investi (€)" : "Montant par mois (€)"}
         >
           <input
-            type="number"
-            min={1}
-            step={50}
+            type="text"
+            inputMode="decimal"
+            placeholder="1000"
             className="field w-full px-3 py-2 text-sm tabular-nums"
-            value={amount}
-            onChange={(e) => setAmount(Number(e.target.value))}
+            value={amountText}
+            onChange={(e) => setAmountText(e.target.value.replace(/[^\d.,]/g, ""))}
           />
+        </Field>
+
+        <Field label="Période">
+          <div className="grid grid-cols-4 gap-2">
+            {PRESETS.map((p) => (
+              <button
+                key={p.label}
+                type="button"
+                onClick={() => applyPreset(p.years)}
+                className="rounded-md border border-border px-2 py-1.5 text-xs font-medium text-muted transition hover:border-brand hover:text-foreground"
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
         </Field>
 
         <div className="grid grid-cols-2 gap-3">
@@ -140,16 +175,22 @@ export function Simulator() {
           </Field>
         </div>
 
+        {invalidRange && (
+          <p className="text-xs" style={{ color: "var(--loss)" }}>
+            La date de début doit précéder la date de fin.
+          </p>
+        )}
+
         <p className="text-[11px] leading-relaxed text-muted">
           Données :{" "}
           {source === "live" ? (
-            <span style={{ color: "var(--gain)" }}>CoinGecko (live)</span>
+            <span style={{ color: "var(--gain)" }}>Binance (live)</span>
           ) : source === "snapshot" ? (
             <span style={{ color: "var(--gold)" }}>snapshot local (fallback)</span>
           ) : (
             "…"
           )}
-          . Historique limité aux ~365 derniers jours.
+          {bounds.min && ` · historique depuis ${bounds.min}`}
         </p>
       </form>
 
@@ -167,8 +208,25 @@ export function Simulator() {
           </div>
         )}
 
+        {!loading && !result && !error && (
+          <div className="card-glass p-8 text-center text-sm text-muted">
+            {amount <= 0
+              ? "Saisissez un montant pour lancer la simulation."
+              : "Ajustez la période pour voir un résultat."}
+          </div>
+        )}
+
         {result && (
           <>
+            <div className="flex items-center justify-between text-xs text-muted">
+              <span>
+                {result.contributions} versement{result.contributions > 1 ? "s" : ""}
+              </span>
+              <span>
+                {frequency === "monthly" ? "DCA mensuel" : "Apport unique"} ·{" "}
+                {coin.name}
+              </span>
+            </div>
             <ResultCards result={result} />
             <EvolutionChart series={result.series} />
             <AiExplanation input={input} result={result} coinName={coin.name} />
@@ -181,6 +239,17 @@ export function Simulator() {
       </div>
     </div>
   );
+}
+
+/** Soustrait n années à une date ISO (YYYY-MM-DD). */
+function subYears(iso: string, n: number): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  return `${y - n}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+}
+
+/** Renvoie la plus grande des deux dates ISO. */
+function maxIso(a: string, b: string): string {
+  return a >= b ? a : b;
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
