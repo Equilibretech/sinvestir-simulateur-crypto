@@ -9,6 +9,7 @@ const lexend = Lexend({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://sinvestir-simulateur-test.vercel.app"),
   title: "Simulateur Crypto · S'investir",
   description:
     "Simulez la performance passée d'un investissement en cryptomonnaie (apport unique ou DCA). Outil S'investir.",

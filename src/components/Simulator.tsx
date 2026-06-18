@@ -294,7 +294,7 @@ export function Simulator() {
         </Field>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Field label="Début">
+          <Field label={strategy === "lump" ? "Date d'achat" : "Début"}>
             <input
               type="date"
               className="field w-full min-w-0 px-3 py-2 text-sm"
@@ -304,7 +304,7 @@ export function Simulator() {
               onChange={(e) => setStartDate(e.target.value)}
             />
           </Field>
-          <Field label="Fin">
+          <Field label={strategy === "lump" ? "Valorisé au" : "Fin"}>
             <input
               type="date"
               className="field w-full min-w-0 px-3 py-2 text-sm"
@@ -315,6 +315,14 @@ export function Simulator() {
             />
           </Field>
         </div>
+
+        {strategy === "lump" && (
+          <p className="text-[11px] leading-relaxed text-muted">
+            Apport unique : un seul achat à la <strong>date d&apos;achat</strong>, puis
+            valeur observée à la date de valorisation. La ligne « Investi » du graphe
+            reste donc plate (capital inchangé).
+          </p>
+        )}
 
         {invalidRange && (
           <p className="text-xs" style={{ color: "var(--loss)" }}>
