@@ -1,5 +1,6 @@
 import { Header } from "@/components/Header";
 import { Simulator } from "@/components/Simulator";
+import { Footer } from "@/components/Footer";
 
 export default function Home() {
   return (
@@ -18,9 +19,7 @@ export default function Home() {
         </div>
         <Simulator />
       </main>
-      <footer className="border-t border-border/60 py-5 text-center text-xs text-muted">
-        Démo — test technique S&apos;investir · Données Binance
-      </footer>
+      <Footer />
     </>
   );
 }
