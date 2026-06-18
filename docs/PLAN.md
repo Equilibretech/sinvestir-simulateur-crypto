@@ -1,5 +1,18 @@
 # Plan de réalisation (demi-journée)
 
+## ✅ Décisions verrouillées (18 juin 2026)
+- **Périmètre : MVP propre + 1 touche IA.** 2-3 cryptos (BTC/ETH/+1), apport unique + DCA mensuel,
+  graphique d'évolution + cartes de résultats, thème S'investir, responsive.
+  **Touche IA** : explication en langage naturel des résultats (via Claude API) — pour matcher le poste « Dev IA ».
+- **Données prix : hybride** — CoinGecko API en live, **fallback** sur snapshot JSON embarqué si l'API échoue.
+- **Déploiement : Vercel** (auth interactive à faire le moment venu).
+- **Repo : GitHub** sous le compte `Equilibretech` (gh CLI déjà connecté).
+
+## Credentials nécessaires (le moment venu, pas avant)
+- [ ] **Auth Vercel** — `npm i -g vercel && vercel login` (interactif) OU token Vercel.
+- [ ] **Clé API Anthropic** (`ANTHROPIC_API_KEY`) pour la touche IA sur la démo déployée.
+      (Modèle pressenti : Haiku 4.5 pour une explication rapide et peu coûteuse — à confirmer à l'implémentation.)
+
 ## Choix techniques proposés (à valider)
 - **Next.js (App Router) + TypeScript** → compatibilité directe avec la stack interne (Next.js/Vercel).
   Justifie le choix vs Nuxt du site cible : on vise l'infra interne, pas le site public.

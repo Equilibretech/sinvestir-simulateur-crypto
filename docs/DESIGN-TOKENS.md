@@ -3,6 +3,10 @@
 > Extraite du CSS de production (`/_nuxt/entry.*.css`) le 18 juin 2026.
 > Le site cible est une app **Nuxt (Vue) + Tailwind v4 (tokens OKLCH)**, thème **sombre fintech**.
 
+## Logo
+- Logo **doré** (`Logo_Sinvestir_Gold.png`) — confirmé comme icône sur la page Notion de consignes.
+  Cohérent avec l'accent or `#f8d047`. À récupérer pour le header du simulateur.
+
 ## Typographie
 - **Police principale : `Lexend`** (Google Fonts), fallback `BlinkMacSystemFont, Segoe UI, Helvetica Neue, Arial, sans-serif`.
 - Graisses utilisées : 300 / 400 / 500 / 600 / 700.
