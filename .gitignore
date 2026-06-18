@@ -33,3 +33,7 @@ yarn-error.log*
 next-env.d.ts
 # Projet
 !.env.example
+
+# Voix perso (ne pas publier)
+docs/voix/
+docs/demo-sinvestir-clone.mp4
