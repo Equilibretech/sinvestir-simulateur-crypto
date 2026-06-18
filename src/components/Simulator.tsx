@@ -89,6 +89,20 @@ export function Simulator() {
     setStartDate(years === "max" ? bounds.min : maxIso(subYears(bounds.max, years), bounds.min));
   }
 
+  // Preset actif = celui dont les dates correspondent exactement à la sélection.
+  // Renvoie null en mode dates personnalisées (aucun bouton mis en évidence).
+  const activePreset = useMemo(() => {
+    if (!bounds.max || endDate !== bounds.max) return null;
+    for (const p of PRESETS) {
+      const s =
+        p.years === "max"
+          ? bounds.min
+          : maxIso(subYears(bounds.max, p.years), bounds.min);
+      if (s === startDate) return p.label;
+    }
+    return null;
+  }, [startDate, endDate, bounds]);
+
   const coin = getCoin(coinId)!;
   const invalidRange = Boolean(startDate && endDate && startDate > endDate);
 
@@ -139,24 +153,33 @@ export function Simulator() {
 
         <Field label="Période">
           <div className="grid grid-cols-4 gap-2">
-            {PRESETS.map((p) => (
-              <button
-                key={p.label}
-                type="button"
-                onClick={() => applyPreset(p.years)}
-                className="rounded-md border border-border px-2 py-1.5 text-xs font-medium text-muted transition hover:border-brand hover:text-foreground"
-              >
-                {p.label}
-              </button>
-            ))}
+            {PRESETS.map((p) => {
+              const active = activePreset === p.label;
+              return (
+                <button
+                  key={p.label}
+                  type="button"
+                  onClick={() => applyPreset(p.years)}
+                  aria-pressed={active}
+                  className="rounded-md border px-2 py-1.5 text-xs font-medium transition"
+                  style={{
+                    borderColor: active ? "var(--brand)" : "var(--border)",
+                    background: active ? "rgba(16,152,247,0.12)" : "transparent",
+                    color: active ? "var(--foreground)" : "var(--text-muted)",
+                  }}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
           </div>
         </Field>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label="Début">
             <input
               type="date"
-              className="field w-full px-3 py-2 text-sm"
+              className="field w-full min-w-0 px-3 py-2 text-sm"
               value={startDate}
               min={bounds.min}
               max={endDate || bounds.max}
@@ -166,7 +189,7 @@ export function Simulator() {
           <Field label="Fin">
             <input
               type="date"
-              className="field w-full px-3 py-2 text-sm"
+              className="field w-full min-w-0 px-3 py-2 text-sm"
               value={endDate}
               min={startDate || bounds.min}
               max={bounds.max}
