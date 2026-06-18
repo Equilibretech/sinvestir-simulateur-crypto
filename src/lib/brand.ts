@@ -1,0 +1,5 @@
+/** Marque graphique S'investir (courbe ascendante dorée sur fond navy). */
+export const MARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none"><defs><linearGradient id="g" x1="8" y1="28" x2="32" y2="11" gradientUnits="userSpaceOnUse"><stop stop-color="#ffe27a"/><stop offset="1" stop-color="#e9b800"/></linearGradient></defs><rect x="2" y="2" width="36" height="36" rx="9" fill="#00173f"/><polyline points="9,27 16,21.5 22,24 31,12.5" stroke="url(#g)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/><polyline points="25.5,12.5 31,12.5 31,18" stroke="url(#g)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`;
+
+/** Marque encodée en data-URI, utilisable comme src d'une <img>. */
+export const MARK_DATA_URI = `data:image/svg+xml,${encodeURIComponent(MARK_SVG)}`;

@@ -1,16 +1,11 @@
+import Image from "next/image";
+
 export function Header() {
   return (
     <header className="w-full border-b border-border/60">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-4">
         <div className="flex items-center gap-2.5">
-          {/* Logo doré S'investir (reproduction simplifiée de l'identité). */}
-          <span
-            aria-hidden
-            className="grid h-8 w-8 place-items-center rounded-md font-bold text-background"
-            style={{ background: "var(--gold)" }}
-          >
-            S
-          </span>
+          <Image src="/logo.svg" alt="S'investir" width={32} height={32} priority />
           <span className="text-[15px] font-semibold tracking-tight">
             S&apos;investir<span className="text-muted"> · Simulateurs</span>
           </span>

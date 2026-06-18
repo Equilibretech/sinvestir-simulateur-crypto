@@ -42,4 +42,10 @@ export interface SimulationResult {
   firstPrice: number;
   /** Prix de sortie (dernier prix de la période). */
   lastPrice: number;
+  /** Prix d'achat moyen pondéré (total investi / unités). */
+  avgEntryPrice: number;
+  /** Performance annualisée en % (CAGR pour lump, XIRR money-weighted pour DCA). */
+  annualizedPct: number;
+  /** Repli maximal (max drawdown) de la valeur du portefeuille, en % (valeur positive). */
+  maxDrawdownPct: number;
 }

@@ -12,12 +12,15 @@ Transposition du [simulateur crypto S'investir](https://sinvestir.fr/simulateur-
 
 ## ✨ Fonctionnalités
 
-- **Backtest rétrospectif** d'un investissement crypto (Bitcoin, Ethereum, Solana).
-- Deux stratégies : **apport unique** (lump sum) et **DCA mensuel** (versements réguliers).
-- Résultats : total investi, valeur finale, **plus/moins-value (€ et %)** + **graphique d'évolution** (valeur vs investi).
+- **Backtest rétrospectif** d'un investissement crypto (7 cryptos : BTC, ETH, SOL, BNB, XRP, ADA, DOGE).
+- Trois modes : **apport unique** (lump sum), **DCA mensuel**, et **Comparer** (lump vs DCA à capital égal, sur le même graphe).
+- Résultats : total investi, valeur finale, **plus/moins-value (€ et %)** + **graphique d'évolution**.
+- **Métriques avancées** : prix d'achat moyen, prix de sortie, **performance annualisée** (CAGR / XIRR money-weighted), **max drawdown**.
 - **Analyse IA** : explication du résultat en langage naturel (modèle Claude via OpenRouter).
 - Données de prix **hybrides** : Binance en live (historique **multi-années**), **repli automatique** sur un snapshot local si l'API échoue.
-- **Présélections de période** (1 an / 3 ans / 5 ans / Max) en plus du choix de dates libre.
+- **Présélections de période** (1 an / 3 ans / 5 ans / Max) avec état actif, + dates libres.
+- **Partage de scénario via URL** (paramètres dans le lien + bouton « Copier le lien »).
+- **Responsive** soigné (graphe downsamplé pour la fluidité mobile) + logo, favicon et image de partage (OG).
 - Thème fidèle à `simulateurs.sinvestir.fr`, **responsive** desktop/mobile.
 
 ## 🚀 Lancer en local

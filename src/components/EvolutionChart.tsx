@@ -2,7 +2,7 @@
 
 import {
   Area,
-  AreaChart,
+  ComposedChart,
   CartesianGrid,
   Line,
   ResponsiveContainer,
@@ -10,24 +10,60 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { SeriesPoint } from "@/lib/types";
+import { downsample } from "@/lib/series";
 import { formatEur, formatDateFr } from "@/lib/format";
 
-export function EvolutionChart({ series }: { series: SeriesPoint[] }) {
+export interface ChartLine {
+  key: string;
+  name: string;
+  color: string;
+  kind: "area" | "line";
+  dashed?: boolean;
+}
+
+export function EvolutionChart({
+  data,
+  lines,
+  title = "Évolution du portefeuille",
+}: {
+  data: Record<string, string | number>[];
+  lines: ChartLine[];
+  title?: string;
+}) {
+  const points = downsample(data, 180);
+
   return (
     <div className="card-glass p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold">Évolution du portefeuille</h3>
-        <Legend />
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold">{title}</h3>
+        <div className="flex flex-wrap items-center gap-3 text-xs text-muted">
+          {lines.map((l) => (
+            <span key={l.key} className="flex items-center gap-1.5">
+              <span
+                className="inline-block"
+                style={
+                  l.kind === "area"
+                    ? { width: 12, height: 8, borderRadius: 2, background: l.color }
+                    : { width: 12, height: 2, background: l.color }
+                }
+              />
+              {l.name}
+            </span>
+          ))}
+        </div>
       </div>
       <div className="h-72 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={series} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
+          <ComposedChart data={points} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
             <defs>
-              <linearGradient id="valueFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--brand)" stopOpacity={0.35} />
-                <stop offset="100%" stopColor="var(--brand)" stopOpacity={0} />
-              </linearGradient>
+              {lines
+                .filter((l) => l.kind === "area")
+                .map((l) => (
+                  <linearGradient key={l.key} id={`fill-${l.key}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={l.color} stopOpacity={0.35} />
+                    <stop offset="100%" stopColor={l.color} stopOpacity={0} />
+                  </linearGradient>
+                ))}
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
             <XAxis
@@ -44,41 +80,35 @@ export function EvolutionChart({ series }: { series: SeriesPoint[] }) {
               stroke="#1e293b"
             />
             <Tooltip content={<ChartTooltip />} />
-            <Area
-              type="monotone"
-              dataKey="value"
-              name="Valeur"
-              stroke="var(--brand)"
-              strokeWidth={2}
-              fill="url(#valueFill)"
-            />
-            <Line
-              type="monotone"
-              dataKey="invested"
-              name="Investi"
-              stroke="var(--gold)"
-              strokeWidth={1.5}
-              strokeDasharray="4 3"
-              dot={false}
-            />
-          </AreaChart>
+            {lines.map((l) =>
+              l.kind === "area" ? (
+                <Area
+                  key={l.key}
+                  type="monotone"
+                  dataKey={l.key}
+                  name={l.name}
+                  stroke={l.color}
+                  strokeWidth={2}
+                  fill={`url(#fill-${l.key})`}
+                  isAnimationActive={false}
+                />
+              ) : (
+                <Line
+                  key={l.key}
+                  type="monotone"
+                  dataKey={l.key}
+                  name={l.name}
+                  stroke={l.color}
+                  strokeWidth={1.8}
+                  strokeDasharray={l.dashed ? "4 3" : undefined}
+                  dot={false}
+                  isAnimationActive={false}
+                />
+              ),
+            )}
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
-    </div>
-  );
-}
-
-function Legend() {
-  return (
-    <div className="flex items-center gap-4 text-xs text-muted">
-      <span className="flex items-center gap-1.5">
-        <span className="h-2 w-3 rounded-sm" style={{ background: "var(--brand)" }} />
-        Valeur
-      </span>
-      <span className="flex items-center gap-1.5">
-        <span className="h-0.5 w-3" style={{ background: "var(--gold)" }} />
-        Investi
-      </span>
     </div>
   );
 }

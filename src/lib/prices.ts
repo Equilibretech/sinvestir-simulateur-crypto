@@ -1,14 +1,8 @@
 import type { PricePoint } from "./types";
 import snapshot from "@/data/snapshot.json";
+import { getCoin } from "./coins";
 
 const SNAPSHOT = snapshot as Record<string, PricePoint[]>;
-
-/** Mapping vers les paires EUR de Binance. */
-const BINANCE_PAIR: Record<string, string> = {
-  bitcoin: "BTCEUR",
-  ethereum: "ETHEUR",
-  solana: "SOLEUR",
-};
 
 export interface PricesResult {
   prices: PricePoint[];
@@ -32,7 +26,7 @@ export async function getPrices(coinId: string): Promise<PricesResult> {
 }
 
 async function fetchFromBinance(coinId: string): Promise<PricePoint[]> {
-  const symbol = BINANCE_PAIR[coinId];
+  const symbol = getCoin(coinId)?.pair;
   if (!symbol) return [];
 
   const byDay = new Map<string, number>();
